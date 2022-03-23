@@ -16,65 +16,74 @@
 <body>
     <%- include('nav.html') %>
 
-    <h4 class="ml-2 my-3 text-center">서버에서 가져온 할일 리스트</h4>
+        <h4 class="ml-2 my-3 text-center">서버에서 가져온 할일 리스트</h4>
 
-    <div class="container">
-        <!--반복문 -->
+                 <!-- 검색기능 -->
+        <div class="container input-group mb-2">
+            <input class="form-control">
+            <button class="input-group-append btn btn-danger">검색</button>
+        </div>
 
-        <ul class="list-group">
-            <% for (var i=0; i < posts.length; i ++) { %>
-                <li class="list-group-item">
-                    <p>글번호 : <%= posts[i]._id %>
-                    </p>
-                    <h4>할일 제목 : <%= posts[i].제목 %>
-                    </h4>
-                    <p>할일 마감날짜 : <%= posts[i].날짜 %>
-                    </p>
-                    <button class="delete btn bg-danger text-white" data-id="<%= posts[i]._id %>">삭제</button>
-                    <a class="detail float-right" href="/Part1/TODOAPP/views/list.ejs">자세히보기</a>
-                </li>
-                <% } %>
-        </ul>
-
-    </div>
+        <div class="container">
+   
+         
 
 
-    <!-- jquery 라이브러리 -->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+            <!--반복문 -->
+            <ul class="list-group">
+                <% for (var i=0; i < posts.length; i ++) { %>
+                    <li class="list-group-item">
+                        <p>글번호 : <%= posts[i]._id %>
+                        </p>
+                        <h4>할일 제목 : <%= posts[i].제목 %>
+                        </h4>
+                        <p>할일 마감날짜 : <%= posts[i].날짜 %>
+                        </p>
+                        <button class="delete btn bg-danger text-white" data-id="<%= posts[i]._id %>">삭제</button>
+                        <a class="detail float-right" href="#">자세히보기</a>
+                    </li>
+                    <% } %>
+            </ul>
 
-    <script>
-        $('.delete').click(function(e){
-            var 글번호 = e.target.dataset.id;
-            var 지금누른거 = $(this);
-          $.ajax({
-            method : 'DELETE',
-            url : '/delete',
-            data : { _id : 글번호 },
-          }).done((결과)=>{
-            //AJAX 성공시 실행할 코드적기
-            // 페이지를 강제로 새로고침해 주세요
-            // 삭제버튼을 누른 <li>요소를 제거해 주세요 / 안보이게
-                console.log('성공했어요');
-                지금누른거.parent('li').fadeOut();
-            
-          }).fail((xhr,textStatus,errorThrown)=>{
-            //AJAX 실패시 실행할 코드적기
-            console.log(xhr,textStatus,errorThrown);
-          });
-        });
-      </script>
+        </div>
 
-      <script>
-          $('.detail').click(function(){
-              $.ajax({
-                  method : 'post',
-                  url : '/detail/:id',
-                  data : {_id : e.target.dataset.id}
-              })
-          })
-      </script>
-    
-    <!-- <script>
+
+        <!-- jquery 라이브러리 -->
+        <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+        <script>
+            $('.delete').click(function (e) {
+                var 글번호 = e.target.dataset.id;
+                var 지금누른거 = $(this);
+                $.ajax({
+                    method: 'DELETE',
+                    url: '/delete',
+                    data: { _id: 글번호 },
+                }).done((결과) => {
+                    //AJAX 성공시 실행할 코드적기
+                    // 페이지를 강제로 새로고침해 주세요
+                    // 삭제버튼을 누른 <li>요소를 제거해 주세요 / 안보이게
+                    console.log('성공했어요');
+                    지금누른거.parent('li').fadeOut();
+
+                }).fail((xhr, textStatus, errorThrown) => {
+                    //AJAX 실패시 실행할 코드적기
+                    console.log(xhr, textStatus, errorThrown);
+                });
+            });
+        </script>
+
+        <script>
+            $('.detail').click(function () {
+                $.ajax({
+                    method: 'post',
+                    url: '/detail/:id',
+                    data: { _id: e.target.dataset.id }
+                })
+            })
+        </script>
+
+        <!-- <script>
         $('.delete').click(function(){
           $.ajax({
             method : 'DELETE',
@@ -88,20 +97,20 @@
 
 
 
-    <!-- 부트스트랩 -->
+        <!-- 부트스트랩 -->
 
-    <!-- Optional JavaScript; choose one of the two! -->
+        <!-- Optional JavaScript; choose one of the two! -->
 
-    <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+        <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
         crossorigin="anonymous"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
-        crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
+            crossorigin="anonymous"></script>
 
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    <!--
+        <!-- Option 2: Separate Popper and Bootstrap JS -->
+        <!--
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js" integrity="sha384-VHvPCCyXqtD5DqJeNxl2dtTyhF78xXNXdkwX1CZeRusQfRKp+tA7hAShOK/B/fQ2" crossorigin="anonymous"></script>
