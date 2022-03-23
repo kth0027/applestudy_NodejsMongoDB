@@ -16,27 +16,22 @@
 <body>
     <%- include('nav.html') %>
 
-    <h4 class="ml-2 my-3 text-center">서버에서 가져온 할일 리스트</h4>
-
-    <div class="container">
-        <!--반복문 -->
-
-        <ul class="list-group">
-            <% for (var i=0; i < posts.length; i ++) { %>
-                <li class="list-group-item">
-                    <p>글번호 : <%= posts[i]._id %>
-                    </p>
-                    <h4>할일 제목 : <%= posts[i].제목 %>
-                    </h4>
-                    <p>할일 마감날짜 : <%= posts[i].날짜 %>
-                    </p>
-                    <button class="delete btn bg-danger text-white" data-id="<%= posts[i]._id %>">삭제</button>
-                    <a class="detail float-right" href="/Part1/TODOAPP/views/list.ejs">자세히보기</a>
-                </li>
-                <% } %>
-        </ul>
-
+    <div class="container mt-4">
+        <h4 class="text-center">상세페이지</h4>
+        <div class="container mt-3">
+            <div class="card" style="width: 100%">
+              <div class="card-body">
+                <h5 class="card-title"><%= data.제목 %></h5>
+                <h6 class="card-subtitle mb-2 text-muted"><%= data.날짜 %></h6>
+                <p class="card-text">임시내용입니다.</p>
+                <a href="#" class="card-link">수정하기</a>
+              </div>
+            </div>
+          </div>
     </div>
+
+
+    
 
 
     <!-- jquery 라이브러리 -->
@@ -62,16 +57,6 @@
             console.log(xhr,textStatus,errorThrown);
           });
         });
-      </script>
-
-      <script>
-          $('.detail').click(function(){
-              $.ajax({
-                  method : 'post',
-                  url : '/detail/:id',
-                  data : {_id : e.target.dataset.id}
-              })
-          })
       </script>
     
     <!-- <script>
