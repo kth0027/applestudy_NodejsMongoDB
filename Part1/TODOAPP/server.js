@@ -186,10 +186,10 @@ passport.deserializeUser(function (아이디, done) {
 });
 
 // 회원가입
-app.post('/register', function(요청, 응답){
-   db.collection('login').insertOne({id:요청.body.id , pw : 요청.body.pw},function(에러, 결과){
+app.post('/register', function (요청, 응답) {
+   db.collection('login').insertOne({ id: 요청.body.id, pw: 요청.body.pw }, function (에러, 결과) {
       응답.redirect('/');
-   } )
+   })
 })
 
 
@@ -198,7 +198,7 @@ app.post('/register', function(요청, 응답){
 // app.get('/search', (요청, 응답) => {
 //    console.log(요청.query.value)
 //    // {object자료} 데이터 꺼냄
-   
+
 //    // 검색만 찾기
 //    db.collection('post').find({ 제목: 요청.query.value }).toArray((에러, 결과) => {
 //       console.log(결과)
@@ -215,30 +215,30 @@ app.post('/register', function(요청, 응답){
 //     })
 // })
 
-app.get('/search', (요청, 응답)=>{
+app.get('/search', (요청, 응답) => {
 
    var 검색조건 = [
-     {
-       $search: {
-         index: 'titleSearch', //'님이만든인덱스명'
-         text: {
-           query: 요청.query.value,
-           path: '제목'  // 제목날짜 둘다 찾고 싶으면 ['제목', '날짜']
+      {
+         $search: {
+            index: 'titleSearch', //'님이만든인덱스명'
+            text: {
+               query: 요청.query.value,
+               path: '제목'  // 제목날짜 둘다 찾고 싶으면 ['제목', '날짜']
+            }
          }
-       }
-     },
-     {$sort : {_id : 1 } }, // 1 or -1
-     {$limit : 10 }, // 검색량 제한
-     {$project : {제목 : 1, _id:1, 날짜 : 1, socre : {$meta : "searchScore"} } } // 보여주고싶은 결과값 설정 (0 안가져옴 // 1 가져옴)
-   ] 
+      },
+      { $sort: { _id: 1 } }, // 1 or -1
+      { $limit: 10 }, // 검색량 제한
+      { $project: { 제목: 1, _id: 1, 날짜: 1, socre: { $meta: "searchScore" } } } // 보여주고싶은 결과값 설정 (0 안가져옴 // 1 가져옴)
+   ]
    console.log(요청.query);
-   db.collection('post').aggregate(검색조건).toArray((에러, 결과)=>{
-     console.log(결과)
-     응답.render('search.ejs', {posts : 결과})
+   db.collection('post').aggregate(검색조건).toArray((에러, 결과) => {
+      console.log(결과)
+      응답.render('search.ejs', { posts: 결과 })
    })
- })
+})
 
- // #1
+// #1
 // 어떤 사람이 /add 경로로 post 요청을 하면...
 // ?? 를 해주세요
 app.post('/add', function (요청, 응답) {
@@ -246,7 +246,7 @@ app.post('/add', function (요청, 응답) {
    db.collection('counter').findOne({ name: '게시물갯수' }, function (에러, 결과) {
       console.log(결과.totalPost)
       var 총게시물갯수 = 결과.totalPost;
-      var 저장할거 = { _id: 총게시물갯수 + 1, 제목: 요청.body.title, 날짜: 요청.body.date, 작성자 : 요청.user._id }
+      var 저장할거 = { _id: 총게시물갯수 + 1, 제목: 요청.body.title, 날짜: 요청.body.date, 작성자: 요청.user._id }
 
       db.collection('post').insertOne(저장할거, function (에러, 결과) {
          console.log('저장완료');
@@ -264,14 +264,14 @@ app.delete('/delete', function (요청, 응답) {
    console.log('삭제요청들어옴')
    console.log(요청.body);
    요청.body._id = parseInt(요청.body._id);
-   
+
    // 로그인 id를 추가해줌으로 조건추가
-   var 삭제할데이터 = {_id:요청.body._id, 작성자 : 요청.user._id}
+   var 삭제할데이터 = { _id: 요청.body._id, 작성자: 요청.user._id }
 
    // 요청.body 에 담겨온 게시물번호를 가진 글을 db에서 찾아서 삭제해주세요
    db.collection('post').deleteOne(삭제할데이터, function (에러, 결과) {
       console.log('삭제완료');
-      if (에러) {console.log(에러)}
+      if (에러) { console.log(에러) }
       응답.status(200).send({ message: '성공했습니다' });
    })
 })
@@ -279,6 +279,49 @@ app.delete('/delete', function (요청, 응답) {
 // route 삽입
 // app.use('/', require('./routes/shop.js'));
 app.use('/shop', require('./routes/shop.js'));
-
 app.use('/board/sub', require('./routes/board.js'));
+
+
+
+// 이미지 업로드
+let multer = require('multer');
+var storage = multer.diskStorage({
+
+   destination: function (req, file, cb) {
+      cb(null, './public/image')
+   },
+   filename: function (req, file, cb) {
+      cb(null, file.originalname)
+      // 파일명 다이나믹하게
+      // cb(null, file.originalname + '날짜' + new Date() )
+   },
+   // 업로드전 제재 하기 (파일형식 확장자 거르기)
+   filefilter : function (req, file, cb) {
+
+   },
+   // 제한
+   // limits : 
+
+});
+
+var upload = multer({ storage: storage });
+
+app.get('/upload', function (요청, 응답) {
+   응답.render('upload.ejs')
+});
+
+// 단일파일
+app.post('/upload', upload.single('프로필'), function (요청, 응답) {
+   // 여러개파일
+   // app.post('/upload', upload.array('프로필', 10), function (요청, 응답) {
+   응답.send('업로드완료')
+});
+
+// 업로드 이미지 보여주기
+app.get('/image/:imageName', function(요청, 응답){
+   응답.sendFile(__dirname + '/public/image/' + 요청.params.imageName)
+})
+
+{/* <img src="/Part1/TODOAPP/public/image/food1.jpg" alt="" /> */}
+
 
