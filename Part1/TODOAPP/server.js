@@ -79,31 +79,6 @@ app.get('/write', function (요청, 응답) {
 
 
 
-
-
-
-// #1
-// 어떤 사람이 /add 경로로 post 요청을 하면...
-// ?? 를 해주세요
-app.post('/add', function (요청, 응답) {
-   응답.send('전송완료');
-   db.collection('counter').findOne({ name: '게시물갯수' }, function (에러, 결과) {
-      console.log(결과.totalPost)
-      var 총게시물갯수 = 결과.totalPost;
-
-      db.collection('post').insertOne({ _id: 총게시물갯수 + 1, 제목: 요청.body.title, 날짜: 요청.body.date }, function () {
-         console.log('저장완료');
-         // counter라는 콜렉션에 있는 totalPost 라는 항목도 1 증가시켜야 함 (수정)
-         // db.collection('counter').updateOne({수정할 데이터},{수정값},function(){})
-         db.collection('counter').updateOne({ name: '게시물갯수' }, { $inc: { totalPost: 1 } }, function (에러, 결과) {
-            if (에러) { return console.log(에러) }
-         })
-      });
-   });
-
-});
-
-
 // #2
 // /list 로  get요청으로 접속하면
 // 실제DB에 저장된 데이터들로 예쁘게 꾸며진 HTML을 보여줌
@@ -114,40 +89,29 @@ app.get('/list', function (요청, 응답) {
    })
 })
 
-// 삭제
-app.delete('/delete', function (요청, 응답) {
-   console.log(요청.body);
-   요청.body._id = parseInt(요청.body._id);
-   // 요청.body 에 담겨온 게시물번호를 가진 글을 db에서 찾아서 삭제해주세요
-   db.collection('post').deleteOne(요청.body, function (에러, 결과) {
-      console.log('삭제완료');
-      응답.status(200).send({ message: '성공했습니다' });
-   })
-})
-
 // /detail 로 접속하면 detail.ejs 보여줌
 app.get('/detail/:id', function (요청, 응답) {
    db.collection('post').findOne({ _id: parseInt(요청.params.id) }, function (에러, 결과) {
       console.log(결과);
-      응답.render('detail.ejs', { data : 결과 });
+      응답.render('detail.ejs', { data: 결과 });
    })
 
 })
 
 // /edit 
-app.get('/edit/:id', function (요청,응답){
+app.get('/edit/:id', function (요청, 응답) {
    // 응답.render('edit.ejs', 파라미터중 :id 번째 게시물 제목/ 날짜)
-   db.collection('post').findOne({_id : parseInt(요청.params.id)}, function(에러, 결과){
+   db.collection('post').findOne({ _id: parseInt(요청.params.id) }, function (에러, 결과) {
       console.log(결과)
-      응답.render('edit.ejs',{post : 결과})
+      응답.render('edit.ejs', { post: 결과 })
    })
-   
+
 })
 
-app.put('/edit', function(요청, 응답){
-   db.collection('post').updateOne( {_id : parseInt(요청.body.id) }, {$set : { 제목 : 요청.body.title , 날짜 : 요청.body.date }}, function(에러, 결과){
+app.put('/edit', function (요청, 응답) {
+   db.collection('post').updateOne({ _id: parseInt(요청.body.id) }, { $set: { 제목: 요청.body.title, 날짜: 요청.body.date } }, function (에러, 결과) {
       console.log('수정완료')
-      응답.redirect('/list')      
+      응답.redirect('/list')
    })
 
 })
@@ -158,30 +122,30 @@ const LocalStrategy = require('passport-local').Strategy;
 const session = require('express-session');
 
 // app.use(미들웨어) 미들웨어 : 요청-응답 중간에 뭔가 실행되는 코드
-app.use(session({secret : '비밀코드', resave : true, saveUninitialized: false}));
+app.use(session({ secret: '비밀코드', resave: true, saveUninitialized: false }));
 app.use(passport.initialize());
-app.use(passport.session()); 
+app.use(passport.session());
 
 // login
-app.get('/login', function(요청,응답){
+app.get('/login', function (요청, 응답) {
    응답.render('login.ejs')
 });
 
 
 app.post('/login', passport.authenticate('local', {
-   failureRedirect : '/fail'
-}), function(요청,응답){
+   failureRedirect: '/fail'
+}), function (요청, 응답) {
    응답.redirect('/')
 });
 
 // 마이페이지
-app.get('/mypage', 로그인했니,function(요청,응답){
+app.get('/mypage', 로그인했니, function (요청, 응답) {
    요청.user
    console.log(요청.user)
-   응답.render('mypage.ejs', {사용자 : 요청.user})
+   응답.render('mypage.ejs', { 사용자: 요청.user })
 });
 
-function 로그인했니(요청,응답,next) {
+function 로그인했니(요청, 응답, next) {
    // 로그인 후 세션이 있으면 요청.user가 항상 있음
    if (요청.user) {
       next()
@@ -195,30 +159,126 @@ passport.use(new LocalStrategy({
    passwordField: 'pw',
    session: true,
    passReqToCallback: false,
- }, function (입력한아이디, 입력한비번, done) {
+}, function (입력한아이디, 입력한비번, done) {
    //console.log(입력한아이디, 입력한비번);
    db.collection('login').findOne({ id: 입력한아이디 }, function (에러, 결과) {
-     if (에러) return done(에러)
- 
-     if (!결과) return done(null, false, { message: '존재하지않는 아이디요' })
-     if (입력한비번 == 결과.pw) {
-       return done(null, 결과)
-     } else {
-       return done(null, false, { message: '비번틀렸어요' })
-     }
+      if (에러) return done(에러)
+
+      if (!결과) return done(null, false, { message: '존재하지않는 아이디요' })
+      if (입력한비번 == 결과.pw) {
+         return done(null, 결과)
+      } else {
+         return done(null, false, { message: '비번틀렸어요' })
+      }
    })
- }));
+}));
 
 // ID를 이용해서 세션을 저장시키는 코드 (로그인 성공시 발동)
- passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
    done(null, user.id)
- });
+});
 
- // 이세션 데잍를 가진 사람을 DB에서 찾아주세요 (마이페이지 접속시)
- passport.deserializeUser(function(아이디, done){
-    db.collection('login').findOne({id:아이디}, function(에러,결과){
+// 이세션 데잍를 가진 사람을 DB에서 찾아주세요 (마이페이지 접속시)
+passport.deserializeUser(function (아이디, done) {
+   db.collection('login').findOne({ id: 아이디 }, function (에러, 결과) {
       done(null, 결과)
-    })
-  
- });
+   })
+});
+
+// 회원가입
+app.post('/register', function(요청, 응답){
+   db.collection('login').insertOne({id:요청.body.id , pw : 요청.body.pw},function(에러, 결과){
+      응답.redirect('/');
+   } )
+})
+
+
+
+// search
+// app.get('/search', (요청, 응답) => {
+//    console.log(요청.query.value)
+//    // {object자료} 데이터 꺼냄
+   
+//    // 검색만 찾기
+//    db.collection('post').find({ 제목: 요청.query.value }).toArray((에러, 결과) => {
+//       console.log(결과)
+//       응답.render('search.ejs', { posts: 결과 })
+//    })
+// })
+
+// app.get('/search', (요청, 응답) => {
+//    console.log(요청.query.value)
+//    // 검색포함 찾기
+//    db.collection('post').find({ $text : { $search: 요청.query.value }}).toArray((에러, 결과)=>{
+//       console.log(결과)
+//       응답.render('search.ejs', {posts : 결과})
+//     })
+// })
+
+app.get('/search', (요청, 응답)=>{
+
+   var 검색조건 = [
+     {
+       $search: {
+         index: 'titleSearch', //'님이만든인덱스명'
+         text: {
+           query: 요청.query.value,
+           path: '제목'  // 제목날짜 둘다 찾고 싶으면 ['제목', '날짜']
+         }
+       }
+     },
+     {$sort : {_id : 1 } }, // 1 or -1
+     {$limit : 10 }, // 검색량 제한
+     {$project : {제목 : 1, _id:1, 날짜 : 1, socre : {$meta : "searchScore"} } } // 보여주고싶은 결과값 설정 (0 안가져옴 // 1 가져옴)
+   ] 
+   console.log(요청.query);
+   db.collection('post').aggregate(검색조건).toArray((에러, 결과)=>{
+     console.log(결과)
+     응답.render('search.ejs', {posts : 결과})
+   })
+ })
+
+ // #1
+// 어떤 사람이 /add 경로로 post 요청을 하면...
+// ?? 를 해주세요
+app.post('/add', function (요청, 응답) {
+   응답.send('전송완료');
+   db.collection('counter').findOne({ name: '게시물갯수' }, function (에러, 결과) {
+      console.log(결과.totalPost)
+      var 총게시물갯수 = 결과.totalPost;
+      var 저장할거 = { _id: 총게시물갯수 + 1, 제목: 요청.body.title, 날짜: 요청.body.date, 작성자 : 요청.user._id }
+
+      db.collection('post').insertOne(저장할거, function (에러, 결과) {
+         console.log('저장완료');
+         // counter라는 콜렉션에 있는 totalPost 라는 항목도 1 증가시켜야 함 (수정)
+         // db.collection('counter').updateOne({수정할 데이터},{수정값},function(){})
+         db.collection('counter').updateOne({ name: '게시물갯수' }, { $inc: { totalPost: 1 } }, function (에러, 결과) {
+            if (에러) { return console.log(에러) }
+         })
+      });
+   });
+});
+
+// 삭제
+app.delete('/delete', function (요청, 응답) {
+   console.log('삭제요청들어옴')
+   console.log(요청.body);
+   요청.body._id = parseInt(요청.body._id);
+   
+   // 로그인 id를 추가해줌으로 조건추가
+   var 삭제할데이터 = {_id:요청.body._id, 작성자 : 요청.user._id}
+
+   // 요청.body 에 담겨온 게시물번호를 가진 글을 db에서 찾아서 삭제해주세요
+   db.collection('post').deleteOne(삭제할데이터, function (에러, 결과) {
+      console.log('삭제완료');
+      if (에러) {console.log(에러)}
+      응답.status(200).send({ message: '성공했습니다' });
+   })
+})
+
+// route 삽입
+// app.use('/', require('./routes/shop.js'));
+app.use('/shop', require('./routes/shop.js'));
+
+app.use('/board/sub', require('./routes/board.js'));
 
