@@ -19,6 +19,12 @@ app.use(methodOverride('_method'))
 require('dotenv').config()
 
 
+// socket
+const http = require('http').createServer(app);
+const { Server, Socket } = require("socket.io");
+const io = new Server(http);
+
+
 // mongodb+srv://kth0027:<password>@cluster0.lkqof.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 
 var db;
@@ -32,7 +38,10 @@ MongoClient.connect('mongodb+srv://kth0027:xogh0027^^@cluster0.lkqof.mongodb.net
    //    console.log('저장완료');
    // });
 
-   app.listen(8080, function () {
+   app.db = db;
+
+   // app.listen(8080, function () {
+   http.listen(8080, function () {
       console.log('listening on 8080')
    })
 })
@@ -296,15 +305,35 @@ var storage = multer.diskStorage({
       // cb(null, file.originalname + '날짜' + new Date() )
    },
    // 업로드전 제재 하기 (파일형식 확장자 거르기)
-   filefilter : function (req, file, cb) {
+   filefilter: function (req, file, cb) {
 
    },
    // 제한
-   // limits : 
+   //    limits:{
+   //       fileSize: 1024 * 1024
+   //   }
 
 });
 
 var upload = multer({ storage: storage });
+
+// 업로드한 파일의 확장자 필터로 원하는 파일만 거르는 법
+// var path = require('path');
+
+// var upload = multer({
+//     storage: storage,
+//     fileFilter: function (req, file, callback) {
+//         var ext = path.extname(file.originalname);
+//         if(ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+//             return callback(new Error('PNG, JPG만 업로드하세요'))
+//         }
+//         callback(null, true)
+//     },
+//     limits:{
+//         fileSize: 1024 * 1024
+//     }
+// });
+
 
 app.get('/upload', function (요청, 응답) {
    응답.render('upload.ejs')
@@ -318,10 +347,120 @@ app.post('/upload', upload.single('프로필'), function (요청, 응답) {
 });
 
 // 업로드 이미지 보여주기
-app.get('/image/:imageName', function(요청, 응답){
+app.get('/image/:imageName', function (요청, 응답) {
    응답.sendFile(__dirname + '/public/image/' + 요청.params.imageName)
 })
 
-{/* <img src="/Part1/TODOAPP/public/image/food1.jpg" alt="" /> */}
+{/* <img src="/Part1/TODOAPP/public/image/food1.jpg" alt="" /> */ }
 
 
+
+// chatroom
+
+const { ObjectId } = require('mongodb');
+app.post('/chatroom', function (요청, 응답) {
+
+   var 저장할거 = {
+      title: '무슨무슨채팅방',
+      member: [ObjectId(요청.body.당한사람id), 요청.user._id],
+      date: new Date()
+   }
+
+   db.collection('chatroom').insertOne(저장할거).then((결과) => {
+      응답.send('저장완료')
+   });
+});
+
+//  내가속한 채팅방 게시물도 보여줘야함
+app.get('/chat', 로그인했니, function (요청, 응답) {
+
+   db.collection('chatroom').find({ member: 요청.user._id }).toArray().then((결과) => {
+      console.log(결과);
+      응답.render('chat.ejs', { data: 결과 })
+   })
+
+});
+
+app.post('/message', 로그인했니, function (요청, 응답) {
+   var 저장할거 = {
+      parent: 요청.body.parent,
+      content: 요청.body.content,
+      userid: 요청.user._id,
+      date: new Date(),
+   }
+   db.collection('message').insertOne(저장할거).then(() => {
+      console.log('DB저장성공');
+      응답.send('DB저장성공');
+   })
+});
+
+
+// 서버와 유저간 실시간 소통채널 열기
+// http 요청시 몰래 전달되는 정보들도 있음
+// (유저의 언어, 브라우저 정보, 가진 쿠키, 어디서왔나)
+// 이런정보는Header라는공간 안에 담겨있음
+
+
+app.get('/message/:id', 로그인했니, function (요청, 응답) {
+
+   // 헤더를 수정해주세요
+   // 서버 => 유저 전달되는 Header를 이렇게 바꾸면 실시간 채널 개설됨
+   응답.writeHead(200, {
+      "Connection": "keep-alive",
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+   });
+
+   // 유저에게 데이터 전송은 event : 보낼데이터이름\n
+   // 유저에게 데이터 전송은 data : 보낼데이터이름\n\n
+   // (참고)서버에서 실시간 전송 시 문자자료만 전송가능
+   db.collection('message').find({ parent: 요청.params.id }).toArray().then((결과) => {
+      응답.write('event: test\n');
+      응답.write('data: ' + JSON.stringify(결과) + '\n\n');
+      // object, array에 따옴표치면 => json 입니다. (json은 문자취급 안받는다)
+   })
+
+   // Change Stream 설정법
+   const pipeline = [
+      { $match: { 'fullDocument.parent': 요청.params.id } }
+   ];
+
+   const collection = db.collection('message');
+   const changeStream = collection.watch(pipeline);
+
+   changeStream.on('change', (result) => {
+      console.log(result.fullDocument);
+      응답.write('event : test\n');
+      응답.write('data : ' + JSON.stringify([result.fullDocument]) + '\n\n');
+   });
+
+});
+
+// socket 채팅방
+app.get('/socket', function (요청, 응답) {
+   응답.render('socket.ejs')
+})
+
+io.on('connection', function (socket) {
+   console.log('유지접속됨');
+
+   // 유저구분시
+   console.log(socket.id);
+   socket.on('user-send', function (data) {
+      console.log(data);
+      io.emit('broadcast', data)  //모든사람에게 데이터 전송
+
+      // 서버 - 유저1명간
+      // io.to(socket.id).emit('broadcast', data)  //한사람에게 데이터 전송
+   });
+
+   // 채팅방1 입장
+   socket.on('joinroom', function(data){
+      socket.join('room1');
+    });
+  
+    socket.on('room1-send', function(data){
+      io.to('room1').emit('broadcast', data);
+    });
+
+});

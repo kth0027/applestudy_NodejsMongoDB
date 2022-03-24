@@ -1,0 +1,153 @@
+<!doctype html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+        integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+    <link rel="stylesheet" href="/Part1/TODOAPP/public/main.css">
+    <style>
+        ul,
+        ol,
+        li {
+            list-style: none;
+        }
+
+        .chat-content li {
+            margin: 0.5rem 0;
+        }
+
+        .chat-content li span {
+            background-color: lightblue;
+            padding: 0 1rem;
+            border-radius: 1rem;
+        }
+
+        .mine {
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('nav.html') %>
+
+        <h4 class="ml-2 my-3 text-center">채팅방</h4>
+
+
+
+
+
+        <div class="container p-4 detail">
+            <div class="row">
+                <div class="col-3">
+                    <ul class="list-group chat-list">
+                        <% for (var i=0; i < data.length ; i++){ %>
+                            <li class="list-group-item" data-id="<%= data[i]._id %>" style="cursor: pointer;">
+                                <h6>
+                                    <%= data[i].title %>
+                                </h6>
+                                <h6 class="text-small" style="font-size: 0.8rem;">
+                                    <%= data[i].member[0] %>
+                                </h6>
+                            </li>
+                            <% } %>
+                    </ul>
+                </div>
+
+                <div class="col-9 p-0">
+                    <div class="chat-room">
+                        <ul class="list-group chat-content">
+                        </ul>
+                        <div class="input-group">
+                            <input class="form-control" id="chat-input">
+                            <button class="btn btn-secondary mx-2" id="send">전송</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- jquery 라이브러리 -->
+        <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+        <!-- 메세지 전송 -->
+        <script>
+            $('#send').click(function () {
+                var 채팅내용 = $('#chat-input').val();   //1, 2
+                var 보낼거 = {
+                    parent: 지금누른채팅방id,
+                    content: 채팅내용,
+                };
+
+                //3
+                $.post('/message', 보낼거).then(() => {
+                    console.log('전송성공')
+                });
+
+            });
+
+
+            //4
+            var 지금누른채팅방id;
+            var eventSource;   //일단변수 
+            $('.list-group-item').click(function () {
+                // 지금누른채팅방id = $(this).attr('data-id');
+                지금누른채팅방id = this.dataset.id;
+                $(this).css('background-color', '#eee');
+
+                // 채팅방 클릭시 비워주기
+                $('.chat-content').html('');
+
+                // 채널입장
+                if (eventSource != undefined){
+                    eventSource.close()
+                }
+                //프론트엔드에서 실시간 소통채널 여는법 
+                eventSource = new EventSource('/message/' + 지금누른채팅방id);
+                eventSource.addEventListener('test', function (e) {
+                                        // console.log(e.data);
+                    console.log(JSON.parse(e.data));
+                    var 가져온거 = JSON.parse(e.data);
+                    가져온거.forEach(function(i){
+                        $('.chat-content').append('<li><span class="chat-box">' + i.content + ' </span></li>')
+                    })
+
+
+                });
+            });
+
+        </script>
+
+
+
+        <!-- 부트스트랩 -->
+
+        <!-- Optional JavaScript; choose one of the two! -->
+
+        <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
+            crossorigin="anonymous"></script>
+
+        <!-- Option 2: Separate Popper and Bootstrap JS -->
+        <!--
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js" integrity="sha384-VHvPCCyXqtD5DqJeNxl2dtTyhF78xXNXdkwX1CZeRusQfRKp+tA7hAShOK/B/fQ2" crossorigin="anonymous"></script>
+    -->
+</body>
+
+</html>

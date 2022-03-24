@@ -40,6 +40,7 @@
                         <p>할일 마감날짜 : <%= posts[i].날짜 %>
                         </p>
                         <button class="delete btn bg-danger text-white" data-id="<%= posts[i]._id %>">삭제</button>
+                        <button class="btn btn-secondary chat" data-id="<%= posts[i].작성자 %>">채팅하기</button>
                         <a class="detail float-right" href="#">자세히보기</a>
                     </li>
                     <% } %>
@@ -95,12 +96,24 @@
         });
       </script> -->
 
-      <script>
-        $('#search').click(function() {
-            var 입력한값 = $('#search-input').val();
-            window.location.replace('/search?value=' + 입력한값)
-        });
-    </script>
+        <script>
+            $('#search').click(function () {
+                var 입력한값 = $('#search-input').val();
+                window.location.replace('/search?value=' + 입력한값)
+            });
+        </script>
+
+        <!-- 채팅버튼 -->
+        <script>
+            $('.chat').click(function (e) {
+                var _id = e.target.dataset.id;
+                $.post('/chatroom', { 당한사람id: _id })
+                    .then(() => {
+                        console.log('채팅방 게시물 생성완료')
+                    })
+            });
+        </script>
+
 
 
 
